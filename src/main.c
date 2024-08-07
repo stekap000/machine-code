@@ -2,11 +2,6 @@
 #include <stdlib.h>
 #include <windows.h>
 
-// 0 1 2 3 4 5 6 7 8 9 a b c d e f
-// 30 ... 39
-// 61 ... 7f
-// Exclude 0a and 0d
-
 typedef unsigned char u8;
 
 static u8 error = 0;
@@ -46,8 +41,10 @@ u8 translate(u8 symbol) {
 	return -1;
 }
 
-int main(void) {
-	FILE* mc_file = fopen("../machine_code.mc", "rb");
+int main(int argc, char** argv) {
+	char* machine_code_file = "machine_code.mc";
+	if(argc == 2) machine_code_file = argv[1];
+	FILE* mc_file = mc_file = fopen(machine_code_file, "rb");
 	if(!mc_file) return -1;
 	int ret = fseek(mc_file, 0, SEEK_END);
 	if(ret) return -1;
