@@ -9,6 +9,7 @@
 
 typedef unsigned char u8;
 
+static u8 error = 0;
 u8 translate(u8 symbol) {
 	switch(symbol) {
 	case '0':
@@ -21,6 +22,7 @@ u8 translate(u8 symbol) {
 	case '7':
 	case '8':
 	case '9':
+		error = 0;
 		return symbol - '0';
 	case 'a':
 	case 'b':
@@ -28,6 +30,7 @@ u8 translate(u8 symbol) {
 	case 'd':
 	case 'e':
 	case 'f':
+		error = 0;
 		return symbol - 'a' + 10;
 	case 'A':
 	case 'B':
@@ -35,9 +38,11 @@ u8 translate(u8 symbol) {
 	case 'D':
 	case 'E':
 	case 'F':
+		error = 0;
 		return symbol - 'A' + 10;
 	}
-
+	
+	error = 1;
 	return -1;
 }
 
@@ -63,8 +68,8 @@ int main(void) {
 	u8 byte = 0;
 	u8 nibble_is_even = 1;
 	for(long i = 0; i < mc_size; ++i) {
-		if(machine_code[i] != ' ' && machine_code[i] != '\n' && machine_code[i] != '\r') {
-			temp = translate(machine_code[i]);
+		temp = translate(machine_code[i]);
+		if(!error) {
 			byte |= (u8)((nibble_is_even) ? (temp << 4) : temp);
 			nibble_is_even ^= 1;
 
