@@ -51,14 +51,14 @@ int main(void) {
 	fseek(mc_file, 0, SEEK_SET);
 	if(ret) return -1;
 
-	u8* instruction_arena = VirtualAlloc(NULL, mc_size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-	(void)instruction_arena;
+	u8* program_instructions = VirtualAlloc(NULL, mc_size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+	typedef void* (*Program)(void);
+	Program program = (Program)program_instructions;
 
 	u8* machine_code = malloc(mc_size);
 	fread(machine_code, 1, mc_size, mc_file);
 	
-	printf("FILE SIZE: %ld\n", mc_size);
-
 	u8 temp = 0;
 	u8 byte = 0;
 	u8 nibble_is_even = 1;
@@ -69,13 +69,16 @@ int main(void) {
 			nibble_is_even ^= 1;
 
 			if(nibble_is_even) {
-				printf("%02x ", byte);
+				*program_instructions++ = byte;
 				byte = 0;
 			}
 		}
 	}
 
 	fclose(mc_file);
+
+	long rax = (long)program();
+	printf("RAX: %ld\n", rax);
 	
 	return 0;
 }
