@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <windows.h>
 
+// TODO: Linux version (windows syscalls are too inaccessible).
+// TODO: Arguments to program procedure should contain important information
+//       (for example, beginning address of written instructions could be passed as
+//       first argument, and it can then be grabbed from register when writting hex).
+
 typedef unsigned char u8;
 
 static u8 error = 0;
