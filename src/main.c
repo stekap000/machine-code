@@ -69,9 +69,12 @@ int main(int argc, char** argv) {
 	u8 temp = 0;
 	u8 byte = 0;
 	u8 nibble_is_even = 1;
+	u8 comment = 0;
 	for(long i = 0; i < mc_size; ++i) {
+		if(machine_code[i] == '#') comment = 1;
+		if(machine_code[i] == '\n') comment = 0;
 		temp = translate(machine_code[i]);
-		if(!error) {
+		if(!error && comment == 0) {
 			byte |= (u8)((nibble_is_even) ? (temp << 4) : temp);
 			nibble_is_even ^= 1;
 
@@ -84,8 +87,10 @@ int main(int argc, char** argv) {
 
 	fclose(mc_file);
 
-	long rax = (long)program();
-	printf("RAX: %ld\n", rax);
+	if((void*)program_instructions != (void*)program) {
+		long rax = (long)program();
+		printf("RAX: %ld\n", rax);
+	}
 	
 	return 0;
 }
