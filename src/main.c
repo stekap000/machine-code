@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
 
 // TODO: Linux version (windows syscalls are too inaccessible).
 // TODO: Arguments to program procedure should contain important information
@@ -46,6 +45,9 @@ u8 translate(u8 symbol) {
 	return -1;
 }
 
+#if defined(_WIN32)
+#include <windows.h>
+
 size_t get_system_page_size() {
 	static size_t system_page_size = 0;
 	if(system_page_size != 0) return system_page_size;
@@ -55,6 +57,24 @@ size_t get_system_page_size() {
 	system_page_size = si.dwPageSize;
 	return system_page_size;
 }
+
+#elif defined(__linux__)
+#include <unistd.h>
+#include <sys/mman.h>
+
+size_t get_system_page_size() {
+	static size_t system_page_size = 0;
+	if(system_page_size != 0) return system_page_size;
+	
+	long size = sysconf(_SC_PAGESIZE);
+	if(size < 0) return 0;
+	system_page_size = (size_t)size;
+	return system_page_size;
+}
+
+#else
+#error Not supported.
+#endif
 
 #define PROGRAM_INSTRUCTIONS_PAGES 2
 
@@ -71,6 +91,7 @@ int main(int argc, char** argv) {
 	if(ret) return -1;
 
 	size_t program_instruction_size = PROGRAM_INSTRUCTIONS_PAGES * get_system_page_size();
+	if(program_instruction_size == 0) return -1;
 
 	u8* program_instructions = VirtualAlloc(NULL,
 											program_instruction_size,
