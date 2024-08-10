@@ -46,6 +46,18 @@ u8 translate(u8 symbol) {
 	return -1;
 }
 
+size_t get_system_page_size() {
+	static size_t system_page_size = 0;
+	if(system_page_size != 0) return system_page_size;
+
+	SYSTEM_INFO si = {0};
+	GetSystemInfo(&si);
+	system_page_size = si.dwPageSize;
+	return system_page_size;
+}
+
+#define PROGRAM_INSTRUCTIONS_PAGES 2
+
 int main(int argc, char** argv) {
 	char* machine_code_file = "machine_code.mc";
 	if(argc == 2) machine_code_file = argv[1];
@@ -58,9 +70,15 @@ int main(int argc, char** argv) {
 	fseek(mc_file, 0, SEEK_SET);
 	if(ret) return -1;
 
-	u8* program_instructions = VirtualAlloc(NULL, mc_size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	size_t program_instruction_size = PROGRAM_INSTRUCTIONS_PAGES * get_system_page_size();
 
-	typedef void* (*Program)(void);
+	u8* program_instructions = VirtualAlloc(NULL,
+											program_instruction_size,
+											MEM_RESERVE | MEM_COMMIT,
+											PAGE_EXECUTE_READWRITE);
+
+	typedef void* (*Program)(void* program_instructions_address,
+							 size_t program_instructions_size);
 	Program program = (Program)program_instructions;
 
 	u8* machine_code = malloc(mc_size);
@@ -87,10 +105,13 @@ int main(int argc, char** argv) {
 
 	fclose(mc_file);
 
+	//* For testing.
 	if((void*)program_instructions != (void*)program) {
-		long rax = (long)program();
-		printf("RAX: %ld\n", rax);
+		size_t rax = (size_t)program(program_instructions,
+								   program_instruction_size);
+		printf("RAX: %zu\n", rax);
 	}
+	//*/
 	
 	return 0;
 }
